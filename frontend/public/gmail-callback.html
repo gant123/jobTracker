@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Connecting Gmail...</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Gmail Authorization</h2>
+    <div class="spinner"></div>
+    <p id="status">Completing authorization...</p>
+  </div>
+
+  <script>
+    // This script runs when the OAuth callback redirects here
+    window.onload = function() {
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get('success');
+      const error = params.get('error');
+      
+      const statusEl = document.getElementById('status');
+      
+      if (success === 'true') {
+        statusEl.innerHTML = '<span class="success">✓ Gmail connected successfully!</span>';
+        statusEl.className = 'success';
+        
+        // Notify parent window
+        if (window.opener) {
+          window.opener.postMessage({ 
+            type: 'gmail-auth-complete', 
+            success: true 
+          }, '*');
+        }
+        
+        // Close after 2 seconds
+        setTimeout(() => {
+          window.close();
+        }, 2000);
+      } else if (error) {
+        statusEl.innerHTML = '<span class="error">✗ Authorization failed: ' + error + '</span>';
+        statusEl.className = 'error';
+        
+        // Notify parent window
+        if (window.opener) {
+          window.opener.postMessage({ 
+            type: 'gmail-auth-complete', 
+            success: false,
+            error: error
+          }, '*');
+        }
+        
+        // Close after 3 seconds
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+      } else {
+        // Still processing
+        statusEl.textContent = 'Processing authorization...';
+      }
+    };
+  </script>
+</body>
+</html>
